@@ -1,28 +1,27 @@
+// App.js
 import React, { Suspense } from 'react';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import { UserProvider } from './contexts/UserContext';
+import ProtectedRoute from './pages/protexted/ProtectedRoute';
+
+import LoginForm from './pages/protexted/LoginForm';
 import Aside from './components/Aside';
 import Content from './components/Content';
 import Footer from './components/Footer';
 import Header from './components/Header';
 
-import { UserProvider } from './contexts/UserContext'; // Cambiado a UserProvider
-import LoginForm from './pages/protexted/LoginForm';
-
-import ProtectedRoute from './pages/protexted/ProtectedRoute';
-
 import ListGeneros from './pages/generos/ListGeneros';
-import ListUsuarios from './pages/usuarios/ListUsuarios';
+import ListUsuarios from './pages/Usuarios/ListUsuarios';
 import ListPlataformas from './pages/plataformas/ListPlataformas';
 import ListJuegos from './pages/juegos/ListJuegos';
 
-import ListCategorias from './pages/tienda/ListCategorias';
-import ListProductos from './pages/tienda/ListProductos';
-import ListTienda from './pages/tienda/ListTienda';
-
-// Importación dinámica de los componentes
 const Dashboard = React.lazy(() => import('./pages/dashboard/Dashboard'));
 
 
+//import { useUser } from './contexts/UserContext';
+import ListVendedores from './pages/vendedores/ListVendedores';
+// Layout protegido: solo para usuarios autenticados
 const ProtectedLayout = () => (
 
   <div className="wrapper">
@@ -38,12 +37,15 @@ const ProtectedLayout = () => (
     </div>
   </div>
 );
+
 const App = () => {
+    //const { user } = useUser(); // Cambiado a useUser
   return (
-    <UserProvider> {/* Cambiado de CompanyProvider a UserProvider */}
+    <UserProvider>
       <BrowserRouter>
-       <Routes>
-           {/* Ruta pública */}
+        <Routes>
+          
+          {/* Ruta pública */}
           <Route path="/login" element={<LoginForm />} />
 
           {/* Rutas protegidas: solo para usuarios autenticados */}
@@ -54,40 +56,58 @@ const App = () => {
               </ProtectedRoute>
             }
           >
-              {/* Todas las rutas hijas están dentro del layout */}
-              <Route path="/" element={<Content />}>
-
-              {/* Solo admin  */}
-              <Route path="dashboard"    element={<ProtectedRoute requiredRol="admin"> <Dashboard />  </ProtectedRoute>}/>
-              <Route path="listusuarios" element={<ProtectedRoute requiredRol="admin"> <ListUsuarios /></ProtectedRoute>}/>
-            
-
-              {/* Solo operador */}
-              <Route path="listcategorias" element={<ProtectedRoute requiredRol="operador"> <ListCategorias /></ProtectedRoute>}/>
-              <Route path="listproductos" element={<ProtectedRoute requiredRol="operador"> <ListProductos /></ProtectedRoute>}/>
-              <Route path="listtienda" element={<ProtectedRoute requiredRol="operador"> <ListTienda /></ProtectedRoute>}/>
-
+            {/* Todas las rutas hijas están dentro del layout */}
+            <Route path="/" element={<Content />}>
+              {/* Solo admin puede ver Dashboard */}
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute requiredRol="admin">
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                element={
+                  <ProtectedRoute requiredRol="admin">
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Estas rutas las ven todos los autenticados (admin y operador) */}
               <Route path="listgeneros" element={<ListGeneros />} />
               <Route path="listplataformas" element={<ListPlataformas />} />
               <Route path="listjuegos" element={<ListJuegos />} />
 
-                
+              {/* Solo admin puede ver y acceder a Usuarios */}
 
-              </Route>
+
+              <Route path="listvendedores" element={
+                  <ProtectedRoute requiredRol="vendedor">
+                    <ListVendedores />
+                  </ProtectedRoute>
+                } />
+
+
+              <Route
+                path="listusuarios"
+                element={
+                  <ProtectedRoute requiredRol="admin">
+                    <ListUsuarios />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
           </Route>
+
           {/* Cualquier otra ruta → login */}
           <Route path="*" element={<Navigate to="/login" />} />
-       </Routes>   
+        </Routes>
       </BrowserRouter>
-    </UserProvider> 
+    </UserProvider>
   );
 };
 
 export default App;
-
-
-
-                             
-  
